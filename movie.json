@@ -4,5 +4,17 @@
         "Genre": "PG",
         "MinAge": 0,
         "ReleaseDate": "0001-01-01T00:00:00Z"
+    },
+    {
+        "Title": "Avengers",
+        "Genre": "PG-13",
+        "MinAge": 13,
+        "ReleaseDate": "0001-01-01T00:00:00Z"
+    },
+    {
+        "Title": "Frozen",
+        "Genre": "Animated",
+        "MinAge": 5,
+        "ReleaseDate": "0001-01-01T00:00:00Z"
     }
 ]

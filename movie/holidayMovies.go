@@ -1,7 +1,23 @@
 package movie
 
 import (
+	"database/sql"
 	"time"
+)
+
+type MovieService struct {
+	db *sql.DB
+}
+
+func NewService(db *sql.DB) *MovieService {
+	return &MovieService{
+		db: db,
+	}
+}
+
+const (
+	insertMovieQuery = "INSERT INTO movies (movie_title, movie_genre, movie_rating) VALUES (?, ?, ?)"
+	selectMovieQuery = "SELECT id, movie_title, movie_genre, movie_rating, release_date FROM movies"
 )
 
 type Preferences struct {
@@ -123,7 +139,7 @@ func (g *Preferences) Recommendation(SelectedPreferences *Preferences) (Movie, b
 }
 
 func (g *Preferences) RecommendationForGivenAge(SelectedPreferences *Preferences) Movie {
-
+	//insert SQL request WHERE these conditions are met
 	for _, movie := range movies {
 		if movie.MinAge <= g.AgeAppropriate && movie.Genre != g.Genre {
 			return movie
@@ -136,18 +152,14 @@ func (g *Preferences) RecommendationForGivenAge(SelectedPreferences *Preferences
 func SetMovie(a []Movie) {
 	movies = a
 }
-func AddMovie(titleInput string, genreInput string, minAgeInput int) Movie {
+func (a *MovieService) AddMovie(titleInput string, genreInput string, minAgeInput int) error {
 
-	newMovie := Movie{
-		Title:  titleInput,
-		Genre:  genreInput,
-		MinAge: minAgeInput,
+	_, err := a.db.Exec(insertMovieQuery, titleInput, genreInput, minAgeInput)
+	if err != nil {
+		return err
 	}
-	movies = append(movies, newMovie)
 
-	SelectGenre = append(SelectGenre, genreInput)
-
-	return newMovie
+	return nil
 }
 func ListMovies() []Movie {
 	return movies

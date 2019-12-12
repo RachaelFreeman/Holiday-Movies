@@ -2,11 +2,14 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"time"
 
+	"github.com/RachaelFreeman/Holiday-Movies/db"
 	"github.com/RachaelFreeman/Holiday-Movies/movie"
 	"github.com/RachaelFreeman/Holiday-Movies/storage"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/manifoldco/promptui"
 )
 
@@ -15,8 +18,19 @@ const (
 	findMovieCmd = "Find Movie"
 )
 
+var movieService *movie.MovieService
+
 func main() {
-	err := storage.Load()
+
+	db, err := db.ConnectDatabase("movies_db.config")
+	if err != nil {
+		fmt.Println("Error:", err.Error())
+		os.Exit(1)
+	}
+
+	movieService = movie.NewService(db)
+
+	err = storage.Load()
 	if err != nil {
 		fmt.Printf("Failed to Load Movies %v\n", err)
 		return
@@ -39,14 +53,11 @@ func main() {
 
 		switch result {
 		case addMovieCmd:
-			yourMovie, err := addMovieDetails()
+			err := addMovieDetails()
 			if err != nil {
 				fmt.Printf("Prompt failed %v\n", err)
 				return
 			}
-			printTitle := yourMovie.Title
-
-			fmt.Println("Successfuly added", printTitle, "to archive.")
 
 			err = storage.Save()
 			if err != nil {
@@ -248,7 +259,7 @@ func ratingConversion(minAge int) string {
 	return ""
 }
 
-func addMovieDetails() (movie.Movie, error) {
+func addMovieDetails() error {
 
 	labels := []string{
 		"What is the title of the movie?",
@@ -266,7 +277,7 @@ func addMovieDetails() (movie.Movie, error) {
 		result, err := titlePrompt.Run()
 		if err != nil {
 			fmt.Printf("Prompt failed %v\n", err)
-			return movie.Movie{}, err
+			return err
 		}
 		movieDetails = append(movieDetails, result)
 	}
@@ -278,11 +289,12 @@ func addMovieDetails() (movie.Movie, error) {
 	minAgeInt, err := strconv.Atoi(minAgeInput)
 	if err != nil {
 		fmt.Printf("Prompt failed %v\n", err)
-		return movie.Movie{}, err
+		return err
 	}
 
-	newMovie := movie.AddMovie(titleInput, genreInput, minAgeInt)
+	err = movieService.AddMovie(titleInput, genreInput, minAgeInt)
 
-	return newMovie, nil
+	fmt.Println("Successfuly added", titleInput, "to archive.")
+	return nil
 
 }
